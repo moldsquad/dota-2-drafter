@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dota 2 Drafter & Counter-Pick Advisor</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --card-bg: #141923;
+      --card-border: #232d3f;
+      --text-main: #f0f4fc;
+      --text-muted: #8b9bb4;
+      --dire-red: #e63946;
+      --dire-glow: rgba(230, 57, 70, 0.35);
+      --radiant-green: #2a9d8f;
+      --radiant-glow: rgba(42, 157, 143, 0.35);
+      --gold: #e9c46a;
+      --accent: #4895ef;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: 30px;
+    }
+    header {
+      padding: 12px 16px;
+      background: #11151f;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo span {
+      color: var(--dire-red);
+    }
+    .badge-pwa {
+      font-size: 0.7rem;
+      background: #1f293d;
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #2d3e5e;
+    }
+
+    /* Team Panels */
+    .draft-board {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .team-panel {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid var(--card-border);
+      position: relative;
+    }
+    .team-panel.dire {
+      border-left: 4px solid var(--dire-red);
+      box-shadow: inset 0 0 15px rgba(230, 57, 70, 0.05);
+    }
+    .team-panel.radiant {
+      border-left: 4px solid var(--radiant-green);
+      box-shadow: inset 0 0 15px rgba(42, 157, 143, 0.05);
+    }
+    .team-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .dire-text { color: var(--dire-red); }
+    .radiant-text { color: var(--radiant-green); }
+
+    .slots-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .hero-slot {
+      aspect-ratio: 16/9;
+      background: #0d111a;
+      border: 1px dashed #2a354a;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+    .hero-slot.filled {
+      border: 1px solid var(--accent);
+      background-size: cover;
+      background-position: center;
+    }
+    .hero-slot .remove-btn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slot-label {
+      font-size: 0.65rem;
+      position: absolute;
+      bottom: 2px;
+      width: 100%;
+      text-align: center;
+      background: rgba(0,0,0,0.7);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 2px;
+    }
+
+    /* Assign selector */
+    .mode-bar {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px;
+      margin-bottom: 10px;
+    }
+    .mode-pill {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-pill.active-dire {
+      background: rgba(230, 57, 70, 0.2);
+      border-color: var(--dire-red);
+      color: #fff;
+    }
+    .mode-pill.active-radiant {
+      background: rgba(42, 157, 143, 0.2);
+      border-color: var(--radiant-green);
+      color: #fff;
+    }
+
+    /* Recommendation Section */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 8px 14px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .recs-scroll {
+      display: flex;
+      gap: 10px;
+      padding: 6px 14px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .recs-scroll::-webkit-scrollbar { display: none; }
+    .rec-card {
+      min-width: 140px;
+      max-width: 140px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+    .rec-card.top-pick {
+      border-color: var(--gold);
+      box-shadow: 0 0 12px rgba(233, 196, 106, 0.2);
+    }
+    .rec-thumb {
+      width: 100%;
+      height: 70px;
+      border-radius: 6px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .rec-score {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0,0,0,0.8);
+      color: #2ec4b6;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .rec-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rec-reason {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    /* Search & Hero Grid */
+    .search-box {
+      padding: 4px 14px 10px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 0 14px;
+    }
+    .hero-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.1s;
+    }
+    .hero-item:active {
+      transform: scale(0.96);
+    }
+    .hero-item img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+    }
+    .hero-item span {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 4px 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Modal Sheet for Build / Counter detail */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+    .modal-overlay.active { display: flex; }
+    .sheet-card {
+      width: 100%;
+      background: #141923;
+      border-top: 1px solid var(--card-border);
+      border-radius: 20px 20px 0 0;
+      padding: 18px 16px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .sheet-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .btn-close {
+      background: #232d3f;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .build-group {
+      margin-bottom: 14px;
+    }
+    .build-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .items-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .item-chip {
+      background: #1b2333;
+      border: 1px solid #2a3752;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .reason-box {
+      background: rgba(233, 196, 106, 0.08);
+      border-left: 3px solid var(--gold);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">DOTA <span>DRAFIQ</span></div>
+    <div class="badge-pwa">PROTOTYPE</div>
+  </header>
+
+  <!-- Drafting Board -->
+  <div class="draft-board">
+    <!-- Enemies (Dire) -->
+    <div class="team-panel dire">
+      <div class="team-header">
+        <span class="dire-text">Враги (Команда Dire)</span>
+        <span id="enemy-count" style="color:var(--text-muted); font-size: 0.7rem;">0 / 5</span>
+      </div>
+      <div class="slots-row" id="enemy-slots"></div>
+    </div>
+
+    <!-- Allies (Radiant) -->
+    <div class="team-panel radiant">
+      <div class="team-header">
+        <span class="radiant-text">Союзники (Команда Radiant)</span>
+        <span id="ally-count" style="color:var(--text-muted); font-size: 0.7rem;">0 / 4</span>
+      </div>
+      <div class="slots-row" id="ally-slots"></div>
+    </div>
+  </div>
+
+  <!-- Mode Selector -->
+  <div class="mode-bar">
+    <div class="mode-pill active-dire" id="btn-mode-dire" onclick="setSelectMode('dire')">
+      Добавить во Враги
+    </div>
+    <div class="mode-pill" id="btn-mode-radiant" onclick="setSelectMode('radiant')">
+      Добавить в Союзники
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section-title">
+    <span>Рекомендации пика</span>
+    <span style="font-size: 0.7rem; color: var(--gold);" id="rec-status">Ждет врагов</span>
+  </div>
+  <div class="recs-scroll" id="recs-container">
+    <div style="color:var(--text-muted); font-size:0.75rem; padding: 10px 0;">
+      Выберите хотя бы 1 героя врага для расчета контрпика и билдов.
+    </div>
+  </div>
+
+  <!-- Search & Catalog -->
+  <div class="search-box">
+    <input type="text" id="hero-search" placeholder="Поиск героя (напр. Pudge, Anti-Mage, Axe)..." oninput="renderHeroGrid()">
+  </div>
+  <div class="hero-grid" id="hero-grid"></div>
+
+  <!-- Build & Analysis Modal -->
+  <div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
+    <div class="sheet-card" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title" id="modal-hero-name">Hero Name</div>
+          <div style="font-size:0.7rem; color: var(--gold);" id="modal-role">Роль: Carry / Initiator</div>
+        </div>
+        <button class="btn-close" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="build-group">
+        <span class="build-tag">Ситуативные предметы против этого пика</span>
+        <div class="items-row" id="modal-counter-items"></div>
+      </div>
+
+      <div class="build-group">
+        <span class="build-tag">Основной костяк сборки (Core Items)</span>
+        <div class="items-row" id="modal-core-items"></div>
+      </div>
+
+      <div class="reason-box" id="modal-strategy-note">
+        Совет по игре против данного драфта...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Hero Data with matchups & key counter items
+    const HEROES = [
+      { id: 'pudge', name: 'Pudge', ru: 'Пудж', role: 'Mid/Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png', counters: ['lifestealer', 'necrophos', 'ursa'], weakAgainst: ['anti_mage', 'weaver'], tags: ['regen', 'tank', 'magic'] },
+      { id: 'anti_mage', name: 'Anti-Mage', ru: 'Антимаг', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png', counters: ['medusa', 'storm_spirit', 'zeus'], weakAgainst: ['axe', 'legion_commander', 'faceless_void'], tags: ['escape', 'mana_burn'] },
+      { id: 'phantom_assassin', name: 'Phantom Assassin', ru: 'Фантомка', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png', counters: ['sniper', 'drow_ranger', 'zeus'], weakAgainst: ['axe', 'bristleback', 'morphling'], tags: ['evasion', 'burst'] },
+      { id: 'axe', name: 'Axe', ru: 'Акс', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png', counters: ['phantom_assassin', 'anti_mage', 'dazzle'], weakAgainst: ['ursa', 'lifestealer', 'necrophos'], tags: ['taunt', 'pure_dmg'] },
+      { id: 'bristleback', name: 'Bristleback', ru: 'Бристлбек', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/bristleback.png', counters: ['phantom_assassin', 'chaos_knight'], weakAgainst: ['silver_edge', 'viper', 'legion_commander'], tags: ['passive', 'tank'] },
+      { id: 'morphling', name: 'Morphling', ru: 'Морфлинг', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/morphling.png', counters: ['phantom_assassin', 'drow_ranger'], weakAgainst: ['ancient_apparition', 'lion', 'shadow_shaman'], tags: ['attribute_shift', 'heal'] },
+      { id: 'invoker', name: 'Invoker', ru: 'Инвокер', role: 'Mid', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png', counters: ['bristleback', 'wraith_king'], weakAgainst: ['anti_mage', 'faceless_void'], tags: ['magic', 'disables'] },
+      { id: 'legion_commander', name: 'Legion Commander', ru: 'Легионка', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/legion_commander.png', counters: ['anti_mage', 'slark', 'bristleback'], weakAgainst: ['dazzle', 'oracle', 'underlord'], tags: ['lockdown', 'dispel'] },
+      { id: 'necrophos', name: 'Necrophos', ru: 'Некрофос', role: 'Mid/Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/necrophos.png', counters: ['pudge', 'axe', 'bristleback'], weakAgainst: ['ancient_apparition', 'anti_mage'], tags: ['regen', 'magic'] },
+      { id: 'sniper', name: 'Sniper', ru: 'Снайпер', role: 'Mid/Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sniper.png', counters: ['drow_ranger', 'medusa'], weakAgainst: ['storm_spirit', 'spectre', 'phantom_assassin'], tags: ['range', 'physical'] },
+      { id: 'ursa', name: 'Ursa', ru: 'Урса', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/ursa.png', counters: ['pudge', 'axe', 'lifestealer'], weakAgainst: ['phantom_lancer', 'windranger', 'viper'], tags: ['burst', 'fury_swipes'] },
+      { id: 'crystal_maiden', name: 'Crystal Maiden', ru: 'ЦМ', role: 'Support', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png', counters: ['slark', 'phantom_assassin'], weakAgainst: ['bkb', 'clockwerk'], tags: ['mana_aura', 'root'] },
+      { id: 'shadow_shaman', name: 'Shadow Shaman', ru: 'Шаман', role: 'Support', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/shadow_shaman.png', counters: ['morphling', 'storm_spirit'], weakAgainst: ['silencer', 'rubick'], tags: ['hex', 'push'] },
+      { id: 'faceless_void', name: 'Faceless Void', ru: 'Войд', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/faceless_void.png', counters: ['anti_mage', 'sniper', 'weaver'], weakAgainst: ['wraith_king', 'axe'], tags: ['chronosphere', 'lockdown'] }
+    ];
+
+    let enemyTeam = [];
+    let allyTeam = [];
+    let currentMode = 'dire'; // 'dire' or 'radiant'
+
+    function setSelectMode(mode) {
+      currentMode = mode;
+      document.getElementById('btn-mode-dire').className = 'mode-pill ' + (mode === 'dire' ? 'active-dire' : '');
+      document.getElementById('btn-mode-radiant').className = 'mode-pill ' + (mode === 'radiant' ? 'active-radiant' : '');
+    }
+
+    function toggleHero(hero) {
+      if (enemyTeam.find(h => h.id === hero.id)) {
+        enemyTeam = enemyTeam.filter(h => h.id !== hero.id);
+      } else if (allyTeam.find(h => h.id === hero.id)) {
+        allyTeam = allyTeam.filter(h => h.id !== hero.id);
+      } else {
+        if (currentMode === 'dire') {
+          if (enemyTeam.length < 5) enemyTeam.push(hero);
+        } else {
+          if (allyTeam.length < 4) allyTeam.push(hero);
+        }
+      }
+      updateUI();
+    }
+
+    function removeHero(id, team) {
+      if (team === 'dire') {
+        enemyTeam = enemyTeam.filter(h => h.id !== id);
+      } else {
+        allyTeam = allyTeam.filter(h => h.id !== id);
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      // Enemy slots
+      const eSlots = document.getElementById('enemy-slots');
+      eSlots.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const hero = enemyTeam[i];
+        if (hero) {
+          eSlots.innerHTML += `
+            <div class="hero-slot filled" style="background-image:url('${hero.img}')">
+              <span class="remove-btn" onclick="event.stopPropagation(); removeHero('${hero.id}', 'dire')">&times;</span>
+              <div class="slot-label">${hero.name}</div>
+            </div>`;
+        } else {
+          eSlots.innerHTML += `<div class="hero-slot">+Враг</div>`;
+        }
+      }
+      document.getElementById('enemy-count').innerText = `${enemyTeam.length} / 5`;
+
+      // Ally slots
+      const aSlots = document.getElementById('ally-slots');
+      aSlots.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const hero = allyTeam[i];
+        if (i === 4) {
+          aSlots.innerHTML += `<div class="hero-slot" style="border-color:var(--gold); color:var(--gold)">Ваш пик</div>`;
+        } else if (hero) {
+          aSlots.innerHTML += `
+            <div class="hero-slot filled" style="background-image:url('${hero.img}')">
+              <span class="remove-btn" onclick="event.stopPropagation(); removeHero('${hero.id}', 'radiant')">&times;</span>
+              <div class="slot-label">${hero.name}</div>
+            </div>`;
+        } else {
+          aSlots.innerHTML += `<div class="hero-slot">+Союзник</div>`;
+        }
+      }
+      document.getElementById('ally-count').innerText = `${allyTeam.length} / 4`;
+
+      renderRecommendations();
+      renderHeroGrid();
+    }
+
+    function calculateScores() {
+      if (enemyTeam.length === 0) return [];
+      const enemyTags = enemyTeam.flatMap(h => h.tags);
+      const enemyIds = enemyTeam.map(h => h.id);
+
+      return HEROES
+        .filter(h => !enemyIds.includes(h.id) && !allyTeam.map(a => a.id).includes(h.id))
+        .map(h => {
+          let score = 50.0;
+          let reasons = [];
+
+          // Counter matchups
+          enemyTeam.forEach(e => {
+            if (h.counters.includes(e.id)) {
+              score += 6.5;
+              reasons.push(`Контрит ${e.name}`);
+            }
+            if (h.weakAgainst.includes(e.id)) {
+              score -= 5.0;
+            }
+          });
+
+          // Tag counter heuristics
+          if (enemyTags.includes('evasion') && (h.id === 'axe' || h.id === 'legion_commander')) {
+            score += 3.5;
+            reasons.push('Пробивает уклонение контролем');
+          }
+          if (enemyTags.includes('regen') && (h.id === 'ancient_apparition' || h.id === 'necrophos')) {
+            score += 4.0;
+            reasons.push('Снижает вражеский отхил');
+          }
+
+          return { hero: h, score: Math.min(68, Math.max(38, score)), reasons: reasons.slice(0, 2) };
+        })
+        .sort((a, b) => b.score - a.score);
+    }
+
+    function renderRecommendations() {
+      const container = document.getElementById('recs-container');
+      const recs = calculateScores();
+      if (recs.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding: 10px 0;">Выберите хотя бы 1 героя врага для расчета контрпика и билдов.</div>';
+        document.getElementById('rec-status').innerText = 'Ждет врагов';
+        return;
+      }
+
+      document.getElementById('rec-status').innerText = 'Анализ готов';
+      container.innerHTML = recs.slice(0, 6).map((item, idx) => `
+        <div class="rec-card ${idx === 0 ? 'top-pick' : ''}" onclick="openBuildModal('${item.hero.id}', ${item.score})">
+          <div class="rec-thumb" style="background-image:url('${item.hero.img}')">
+            <span class="rec-score">${item.score.toFixed(1)}%</span>
+          </div>
+          <div class="rec-name">${item.hero.name}</div>
+          <div class="rec-reason">${item.reasons.length ? item.reasons.join(', ') : 'Хороший общий баланс'}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderHeroGrid() {
+      const q = document.getElementById('hero-search').value.toLowerCase().trim();
+      const grid = document.getElementById('hero-grid');
+      const filtered = HEROES.filter(h => 
+        h.name.toLowerCase().includes(q) || h.ru.toLowerCase().includes(q)
+      );
+
+      grid.innerHTML = filtered.map(h => {
+        const inEnemy = enemyTeam.some(e => e.id === h.id);
+        const inAlly = allyTeam.some(a => a.id === h.id);
+        const borderStyle = inEnemy ? 'border: 2px solid var(--dire-red)' : (inAlly ? 'border: 2px solid var(--radiant-green)' : '');
+        return `
+          <div class="hero-item" style="${borderStyle}" onclick="toggleHero(HEROES.find(x => x.id === '${h.id}'))">
+            <img src="${h.img}" alt="${h.name}">
+            <span>${h.name}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openBuildModal(heroId, score) {
+      const hero = HEROES.find(h => h.id === heroId);
+      if (!hero) return;
+
+      document.getElementById('modal-hero-name').innerText = `${hero.name} (${score ? score.toFixed(1) + '% винрейт' : ''})`;
+      document.getElementById('modal-role').innerText = `Позиция: ${hero.role}`;
+
+      const enemyTags = enemyTeam.flatMap(h => h.tags);
+      let counterItems = [];
+      let notes = [];
+
+      if (enemyTags.includes('evasion')) {
+        counterItems.push('Monkey King Bar (MKB)');
+        notes.push('У врагов есть миссы/уклонения — MKB обязателен вторым или третьим слотом.');
+      }
+      if (enemyTags.includes('passive')) {
+        counterItems.push('Silver Edge (Break)');
+        notes.push('Есть сильные пассивки (Бристл / Спектра) — нужен Silver Edge для отключения.');
+      }
+      if (enemyTags.includes('regen')) {
+        counterItems.push('Spirit Vessel / Shiva');
+        notes.push('Вражеский пик сильно лечится или вампирится — режьте хил предметами.');
+      }
+      if (enemyTeam.some(e => e.tags.includes('disables') || e.tags.includes('magic'))) {
+        counterItems.push('Black King Bar (BKB)');
+        notes.push('Много магии и дизейблов — тайминг BKB решает исход мидгейм-файтов.');
+      }
+      if (counterItems.length === 0) {
+        counterItems.push('Blink Dagger', 'Black King Bar');
+        notes.push('Пик врагов сбалансирован, делайте упор на стандартные тайминговые артефакты.');
+      }
+
+      document.getElementById('modal-counter-items').innerHTML = counterItems.map(it => `
+        <div class="item-chip">⚔️ ${it}</div>
+      `).join('');
+
+      // Standard core items by archetype
+      let coreItems = ['Power Treads / Phase', 'Manta / Sange & Yasha', 'Aghanims Scepter'];
+      if (hero.role.includes('Support')) {
+        coreItems = ['Arcane Boots', 'Force Staff', 'Glimmer Cape', 'Aghanim Shard'];
+      }
+      document.getElementById('modal-core-items').innerHTML = coreItems.map(it => `
+        <div class="item-chip">🛡️ ${it}</div>
+      `).join('');
+
+      document.getElementById('modal-strategy-note').innerText = notes.join(' ');
+      document.getElementById('detail-modal').classList.add('active');
+    }
+
+    function closeModal(e) {
+      document.getElementById('detail-modal').classList.remove('active');
+    }
+
+    // Init
+    updateUI();
+  </script>
+</body>
+</html>
