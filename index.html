@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Dota 2 Drafter & Counter-Pick Advisor</title>
+  <title>Dota Drafter & Counter Pick</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1117">
+  <meta name="theme-color" content="#0b0e14">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
@@ -16,9 +16,7 @@
       --text-main: #f0f4fc;
       --text-muted: #8b9bb4;
       --dire-red: #e63946;
-      --dire-glow: rgba(230, 57, 70, 0.35);
       --radiant-green: #2a9d8f;
-      --radiant-glow: rgba(42, 157, 143, 0.35);
       --gold: #e9c46a;
       --accent: #4895ef;
     }
@@ -58,11 +56,9 @@
       align-items: center;
       gap: 8px;
     }
-    .logo span {
-      color: var(--dire-red);
-    }
-    .badge-pwa {
-      font-size: 0.7rem;
+    .logo span { color: var(--dire-red); }
+    .status-badge {
+      font-size: 0.65rem;
       background: #1f293d;
       color: var(--accent);
       padding: 3px 8px;
@@ -70,7 +66,7 @@
       border: 1px solid #2d3e5e;
     }
 
-    /* Team Panels */
+    /* Draft Boards */
     .draft-board {
       display: flex;
       flex-direction: column;
@@ -82,7 +78,6 @@
       border-radius: 12px;
       padding: 10px;
       border: 1px solid var(--card-border);
-      position: relative;
     }
     .team-panel.dire {
       border-left: 4px solid var(--dire-red);
@@ -134,30 +129,31 @@
       position: absolute;
       top: 2px;
       right: 2px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       color: #fff;
       border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 2;
     }
     .slot-label {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       position: absolute;
-      bottom: 2px;
+      bottom: 0;
       width: 100%;
       text-align: center;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      padding: 0 2px;
+      padding: 1px 2px;
     }
 
-    /* Assign selector */
+    /* Mode Selector */
     .mode-bar {
       display: flex;
       gap: 8px;
@@ -166,7 +162,7 @@
     }
     .mode-pill {
       flex: 1;
-      padding: 8px 12px;
+      padding: 9px 12px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 8px;
@@ -178,17 +174,17 @@
       transition: all 0.2s;
     }
     .mode-pill.active-dire {
-      background: rgba(230, 57, 70, 0.2);
+      background: rgba(230, 57, 70, 0.25);
       border-color: var(--dire-red);
       color: #fff;
     }
     .mode-pill.active-radiant {
-      background: rgba(42, 157, 143, 0.2);
+      background: rgba(42, 157, 143, 0.25);
       border-color: var(--radiant-green);
       color: #fff;
     }
 
-    /* Recommendation Section */
+    /* Recommendations */
     .section-title {
       font-size: 0.85rem;
       font-weight: 700;
@@ -208,8 +204,8 @@
     }
     .recs-scroll::-webkit-scrollbar { display: none; }
     .rec-card {
-      min-width: 140px;
-      max-width: 140px;
+      min-width: 135px;
+      max-width: 135px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 10px;
@@ -218,15 +214,15 @@
       flex-direction: column;
       gap: 6px;
       cursor: pointer;
-      position: relative;
+      flex-shrink: 0;
     }
     .rec-card.top-pick {
       border-color: var(--gold);
-      box-shadow: 0 0 12px rgba(233, 196, 106, 0.2);
+      box-shadow: 0 0 12px rgba(233, 196, 106, 0.25);
     }
     .rec-thumb {
       width: 100%;
-      height: 70px;
+      height: 65px;
       border-radius: 6px;
       background-size: cover;
       background-position: center;
@@ -236,7 +232,7 @@
       position: absolute;
       bottom: 4px;
       right: 4px;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       color: #2ec4b6;
       font-size: 0.7rem;
       font-weight: 700;
@@ -285,9 +281,7 @@
       text-align: center;
       transition: transform 0.1s;
     }
-    .hero-item:active {
-      transform: scale(0.96);
-    }
+    .hero-item:active { transform: scale(0.96); }
     .hero-item img {
       width: 100%;
       aspect-ratio: 16/9;
@@ -321,7 +315,7 @@
       border-top: 1px solid var(--card-border);
       border-radius: 20px 20px 0 0;
       padding: 18px 16px;
-      max-height: 80vh;
+      max-height: 85vh;
       overflow-y: auto;
       animation: slideUp 0.25s ease-out;
     }
@@ -343,9 +337,9 @@
       background: #232d3f;
       border: none;
       color: #fff;
-      font-size: 1.1rem;
-      width: 28px;
-      height: 28px;
+      font-size: 1.2rem;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       cursor: pointer;
     }
@@ -357,7 +351,7 @@
       font-weight: 700;
       color: var(--accent);
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       display: block;
     }
     .items-row {
@@ -390,7 +384,7 @@
 
   <header>
     <div class="logo">DOTA <span>DRAFIQ</span></div>
-    <div class="badge-pwa">PROTOTYPE</div>
+    <div class="status-badge" id="app-status">Загрузка базы...</div>
   </header>
 
   <!-- Drafting Board -->
@@ -431,13 +425,13 @@
   </div>
   <div class="recs-scroll" id="recs-container">
     <div style="color:var(--text-muted); font-size:0.75rem; padding: 10px 0;">
-      Выберите хотя бы 1 героя врага для расчета контрпика и билдов.
+      Выберите хотя бы одного героя врага для расчета контрпика и билдов.
     </div>
   </div>
 
   <!-- Search & Catalog -->
   <div class="search-box">
-    <input type="text" id="hero-search" placeholder="Поиск героя (напр. Pudge, Anti-Mage, Axe)..." oninput="renderHeroGrid()">
+    <input type="text" id="hero-search" placeholder="Поиск среди 124+ героев (Pudge, Axe, AM)..." oninput="renderHeroGrid()">
   </div>
   <div class="hero-grid" id="hero-grid"></div>
 
@@ -453,13 +447,13 @@
       </div>
 
       <div class="build-group">
-        <span class="build-tag">Ситуативные предметы против этого пика</span>
+        <span class="build-tag">Ситуативные предметы против текущего пика</span>
         <div class="items-row" id="modal-counter-items"></div>
       </div>
 
       <div class="build-group">
-        <span class="build-tag">Основной костяк сборки (Core Items)</span>
-        <div class="items-row" id="modal-core-items"></div>
+        <span class="build-tag">Актуальный билд (Мета OpenDota)</span>
+        <div class="items-row" id="modal-core-items">Загрузка популярных предметов...</div>
       </div>
 
       <div class="reason-box" id="modal-strategy-note">
@@ -469,27 +463,46 @@
   </div>
 
   <script>
-    // Hero Data with matchups & key counter items
-    const HEROES = [
-      { id: 'pudge', name: 'Pudge', ru: 'Пудж', role: 'Mid/Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png', counters: ['lifestealer', 'necrophos', 'ursa'], weakAgainst: ['anti_mage', 'weaver'], tags: ['regen', 'tank', 'magic'] },
-      { id: 'anti_mage', name: 'Anti-Mage', ru: 'Антимаг', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png', counters: ['medusa', 'storm_spirit', 'zeus'], weakAgainst: ['axe', 'legion_commander', 'faceless_void'], tags: ['escape', 'mana_burn'] },
-      { id: 'phantom_assassin', name: 'Phantom Assassin', ru: 'Фантомка', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png', counters: ['sniper', 'drow_ranger', 'zeus'], weakAgainst: ['axe', 'bristleback', 'morphling'], tags: ['evasion', 'burst'] },
-      { id: 'axe', name: 'Axe', ru: 'Акс', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png', counters: ['phantom_assassin', 'anti_mage', 'dazzle'], weakAgainst: ['ursa', 'lifestealer', 'necrophos'], tags: ['taunt', 'pure_dmg'] },
-      { id: 'bristleback', name: 'Bristleback', ru: 'Бристлбек', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/bristleback.png', counters: ['phantom_assassin', 'chaos_knight'], weakAgainst: ['silver_edge', 'viper', 'legion_commander'], tags: ['passive', 'tank'] },
-      { id: 'morphling', name: 'Morphling', ru: 'Морфлинг', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/morphling.png', counters: ['phantom_assassin', 'drow_ranger'], weakAgainst: ['ancient_apparition', 'lion', 'shadow_shaman'], tags: ['attribute_shift', 'heal'] },
-      { id: 'invoker', name: 'Invoker', ru: 'Инвокер', role: 'Mid', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png', counters: ['bristleback', 'wraith_king'], weakAgainst: ['anti_mage', 'faceless_void'], tags: ['magic', 'disables'] },
-      { id: 'legion_commander', name: 'Legion Commander', ru: 'Легионка', role: 'Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/legion_commander.png', counters: ['anti_mage', 'slark', 'bristleback'], weakAgainst: ['dazzle', 'oracle', 'underlord'], tags: ['lockdown', 'dispel'] },
-      { id: 'necrophos', name: 'Necrophos', ru: 'Некрофос', role: 'Mid/Offlane', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/necrophos.png', counters: ['pudge', 'axe', 'bristleback'], weakAgainst: ['ancient_apparition', 'anti_mage'], tags: ['regen', 'magic'] },
-      { id: 'sniper', name: 'Sniper', ru: 'Снайпер', role: 'Mid/Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sniper.png', counters: ['drow_ranger', 'medusa'], weakAgainst: ['storm_spirit', 'spectre', 'phantom_assassin'], tags: ['range', 'physical'] },
-      { id: 'ursa', name: 'Ursa', ru: 'Урса', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/ursa.png', counters: ['pudge', 'axe', 'lifestealer'], weakAgainst: ['phantom_lancer', 'windranger', 'viper'], tags: ['burst', 'fury_swipes'] },
-      { id: 'crystal_maiden', name: 'Crystal Maiden', ru: 'ЦМ', role: 'Support', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png', counters: ['slark', 'phantom_assassin'], weakAgainst: ['bkb', 'clockwerk'], tags: ['mana_aura', 'root'] },
-      { id: 'shadow_shaman', name: 'Shadow Shaman', ru: 'Шаман', role: 'Support', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/shadow_shaman.png', counters: ['morphling', 'storm_spirit'], weakAgainst: ['silencer', 'rubick'], tags: ['hex', 'push'] },
-      { id: 'faceless_void', name: 'Faceless Void', ru: 'Войд', role: 'Carry', img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/faceless_void.png', counters: ['anti_mage', 'sniper', 'weaver'], weakAgainst: ['wraith_king', 'axe'], tags: ['chronosphere', 'lockdown'] }
-    ];
-
+    let HEROES = [];
     let enemyTeam = [];
     let allyTeam = [];
-    let currentMode = 'dire'; // 'dire' or 'radiant'
+    let currentMode = 'dire';
+    const matchupsCache = {};
+    const itemPopularityCache = {};
+
+    // 1. Fetch complete list of 124+ heroes from OpenDota API
+    async function initHeroes() {
+      const statusEl = document.getElementById('app-status');
+      try {
+        const cached = localStorage.getItem('opendota_herostats_v1');
+        let data;
+        if (cached) {
+          data = JSON.parse(cached);
+        } else {
+          const res = await fetch('https://api.opendota.com/api/heroStats');
+          data = await res.json();
+          localStorage.setItem('opendota_herostats_v1', JSON.stringify(data));
+        }
+
+        HEROES = data.map(h => ({
+          hero_id: h.id,
+          id: h.name.replace('npc_dota_hero_', ''),
+          name: h.localized_name,
+          ru: h.localized_name,
+          role: (h.roles || []).slice(0, 2).join(' / '),
+          primary_attr: h.primary_attr,
+          roles: h.roles || [],
+          img: `https://cdn.cloudflare.steamstatic.com${h.img}`,
+          base_winrate: (h.pro_win && h.pro_pick) ? ((h.pro_win / h.pro_pick) * 100).toFixed(1) : '50.0'
+        })).sort((a, b) => a.name.localeCompare(b.name));
+
+        statusEl.innerText = `${HEROES.length} Героев (Online)`;
+        updateUI();
+      } catch (e) {
+        console.error(e);
+        statusEl.innerText = 'Офлайн режим';
+      }
+    }
 
     function setSelectMode(mode) {
       currentMode = mode;
@@ -497,14 +510,17 @@
       document.getElementById('btn-mode-radiant').className = 'mode-pill ' + (mode === 'radiant' ? 'active-radiant' : '');
     }
 
-    function toggleHero(hero) {
-      if (enemyTeam.find(h => h.id === hero.id)) {
-        enemyTeam = enemyTeam.filter(h => h.id !== hero.id);
-      } else if (allyTeam.find(h => h.id === hero.id)) {
-        allyTeam = allyTeam.filter(h => h.id !== hero.id);
+    async function toggleHero(hero) {
+      if (enemyTeam.find(h => h.hero_id === hero.hero_id)) {
+        enemyTeam = enemyTeam.filter(h => h.hero_id !== hero.hero_id);
+      } else if (allyTeam.find(h => h.hero_id === hero.hero_id)) {
+        allyTeam = allyTeam.filter(h => h.hero_id !== hero.hero_id);
       } else {
         if (currentMode === 'dire') {
-          if (enemyTeam.length < 5) enemyTeam.push(hero);
+          if (enemyTeam.length < 5) {
+            enemyTeam.push(hero);
+            fetchHeroMatchups(hero.hero_id);
+          }
         } else {
           if (allyTeam.length < 4) allyTeam.push(hero);
         }
@@ -512,13 +528,25 @@
       updateUI();
     }
 
-    function removeHero(id, team) {
+    function removeHero(heroId, team) {
       if (team === 'dire') {
-        enemyTeam = enemyTeam.filter(h => h.id !== id);
+        enemyTeam = enemyTeam.filter(h => h.hero_id !== heroId);
       } else {
-        allyTeam = allyTeam.filter(h => h.id !== id);
+        allyTeam = allyTeam.filter(h => h.hero_id !== heroId);
       }
       updateUI();
+    }
+
+    async function fetchHeroMatchups(heroId) {
+      if (matchupsCache[heroId]) return matchupsCache[heroId];
+      try {
+        const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+        const data = await res.json();
+        matchupsCache[heroId] = data;
+        renderRecommendations();
+      } catch (err) {
+        console.warn('Matchup fetch failed:', err);
+      }
     }
 
     function updateUI() {
@@ -530,7 +558,7 @@
         if (hero) {
           eSlots.innerHTML += `
             <div class="hero-slot filled" style="background-image:url('${hero.img}')">
-              <span class="remove-btn" onclick="event.stopPropagation(); removeHero('${hero.id}', 'dire')">&times;</span>
+              <span class="remove-btn" onclick="event.stopPropagation(); removeHero(${hero.hero_id}, 'dire')">&times;</span>
               <div class="slot-label">${hero.name}</div>
             </div>`;
         } else {
@@ -549,7 +577,7 @@
         } else if (hero) {
           aSlots.innerHTML += `
             <div class="hero-slot filled" style="background-image:url('${hero.img}')">
-              <span class="remove-btn" onclick="event.stopPropagation(); removeHero('${hero.id}', 'radiant')">&times;</span>
+              <span class="remove-btn" onclick="event.stopPropagation(); removeHero(${hero.hero_id}, 'radiant')">&times;</span>
               <div class="slot-label">${hero.name}</div>
             </div>`;
         } else {
@@ -562,60 +590,62 @@
       renderHeroGrid();
     }
 
-    function calculateScores() {
+    function calculateAdvantage() {
       if (enemyTeam.length === 0) return [];
-      const enemyTags = enemyTeam.flatMap(h => h.tags);
-      const enemyIds = enemyTeam.map(h => h.id);
+      const enemyIds = enemyTeam.map(h => h.hero_id);
+      const allyIds = allyTeam.map(h => h.hero_id);
 
       return HEROES
-        .filter(h => !enemyIds.includes(h.id) && !allyTeam.map(a => a.id).includes(h.id))
+        .filter(h => !enemyIds.includes(h.hero_id) && !allyIds.includes(h.hero_id))
         .map(h => {
           let score = 50.0;
-          let reasons = [];
+          let counterNotes = [];
 
-          // Counter matchups
           enemyTeam.forEach(e => {
-            if (h.counters.includes(e.id)) {
-              score += 6.5;
-              reasons.push(`Контрит ${e.name}`);
-            }
-            if (h.weakAgainst.includes(e.id)) {
-              score -= 5.0;
+            const eMatchups = matchupsCache[e.hero_id];
+            if (eMatchups) {
+              const match = eMatchups.find(m => m.hero_id === h.hero_id);
+              if (match && match.games_played > 15) {
+                // Win rate of h against e
+                const winRate = ((match.games_played - match.wins) / match.games_played) * 100;
+                const adv = winRate - 50.0;
+                score += (adv * 0.4);
+                if (adv > 3.0) counterNotes.push(`Контрит ${e.name}`);
+              }
             }
           });
 
-          // Tag counter heuristics
-          if (enemyTags.includes('evasion') && (h.id === 'axe' || h.id === 'legion_commander')) {
-            score += 3.5;
-            reasons.push('Пробивает уклонение контролем');
-          }
-          if (enemyTags.includes('regen') && (h.id === 'ancient_apparition' || h.id === 'necrophos')) {
-            score += 4.0;
-            reasons.push('Снижает вражеский отхил');
+          // Fallback heuristic if matchups are still loading
+          if (counterNotes.length === 0) {
+            if (['pudge', 'bristleback', 'necrophos'].includes(h.id)) score += 1.5;
           }
 
-          return { hero: h, score: Math.min(68, Math.max(38, score)), reasons: reasons.slice(0, 2) };
+          return {
+            hero: h,
+            score: Math.min(68, Math.max(34, score)),
+            reasons: counterNotes.slice(0, 2)
+          };
         })
         .sort((a, b) => b.score - a.score);
     }
 
     function renderRecommendations() {
       const container = document.getElementById('recs-container');
-      const recs = calculateScores();
+      const recs = calculateAdvantage();
       if (recs.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding: 10px 0;">Выберите хотя бы 1 героя врага для расчета контрпика и билдов.</div>';
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding: 10px 0;">Выберите хотя бы одного героя врага для расчета контрпика и билдов.</div>';
         document.getElementById('rec-status').innerText = 'Ждет врагов';
         return;
       }
 
       document.getElementById('rec-status').innerText = 'Анализ готов';
-      container.innerHTML = recs.slice(0, 6).map((item, idx) => `
-        <div class="rec-card ${idx === 0 ? 'top-pick' : ''}" onclick="openBuildModal('${item.hero.id}', ${item.score})">
+      container.innerHTML = recs.slice(0, 7).map((item, idx) => `
+        <div class="rec-card ${idx === 0 ? 'top-pick' : ''}" onclick="openBuildModal(${item.hero.hero_id}, ${item.score})">
           <div class="rec-thumb" style="background-image:url('${item.hero.img}')">
             <span class="rec-score">${item.score.toFixed(1)}%</span>
           </div>
           <div class="rec-name">${item.hero.name}</div>
-          <div class="rec-reason">${item.reasons.length ? item.reasons.join(', ') : 'Хороший общий баланс'}</div>
+          <div class="rec-reason">${item.reasons.length ? item.reasons.join(', ') : 'Хороший винрейт против сетапа'}</div>
         </div>
       `).join('');
     }
@@ -628,64 +658,102 @@
       );
 
       grid.innerHTML = filtered.map(h => {
-        const inEnemy = enemyTeam.some(e => e.id === h.id);
-        const inAlly = allyTeam.some(a => a.id === h.id);
+        const inEnemy = enemyTeam.some(e => e.hero_id === h.hero_id);
+        const inAlly = allyTeam.some(a => a.hero_id === h.hero_id);
         const borderStyle = inEnemy ? 'border: 2px solid var(--dire-red)' : (inAlly ? 'border: 2px solid var(--radiant-green)' : '');
         return `
-          <div class="hero-item" style="${borderStyle}" onclick="toggleHero(HEROES.find(x => x.id === '${h.id}'))">
-            <img src="${h.img}" alt="${h.name}">
+          <div class="hero-item" style="${borderStyle}" onclick="toggleHero(HEROES.find(x => x.hero_id === ${h.hero_id}))">
+            <img src="${h.img}" alt="${h.name}" loading="lazy">
             <span>${h.name}</span>
           </div>
         `;
       }).join('');
     }
 
-    function openBuildModal(heroId, score) {
-      const hero = HEROES.find(h => h.id === heroId);
+    async function openBuildModal(heroId, score) {
+      const hero = HEROES.find(h => h.hero_id === heroId);
       if (!hero) return;
 
-      document.getElementById('modal-hero-name').innerText = `${hero.name} (${score ? score.toFixed(1) + '% винрейт' : ''})`;
-      document.getElementById('modal-role').innerText = `Позиция: ${hero.role}`;
+      document.getElementById('modal-hero-name').innerText = `${hero.name} (${score ? score.toFixed(1) + '%' : ''})`;
+      document.getElementById('modal-role').innerText = `Позиция: ${hero.role} | Атрибут: ${hero.primary_attr.toUpperCase()}`;
 
-      const enemyTags = enemyTeam.flatMap(h => h.tags);
+      // Adaptive counter-items based on enemy lineup
+      const enemyNames = enemyTeam.map(e => e.id);
       let counterItems = [];
       let notes = [];
 
-      if (enemyTags.includes('evasion')) {
+      if (enemyNames.some(id => ['phantom_assassin', 'windrunner', 'brewmaster'].includes(id))) {
         counterItems.push('Monkey King Bar (MKB)');
-        notes.push('У врагов есть миссы/уклонения — MKB обязателен вторым или третьим слотом.');
+        notes.push('У врагов есть сильные уклонения — MKB обеспечит 100% попадание с руки.');
       }
-      if (enemyTags.includes('passive')) {
+      if (enemyNames.some(id => ['bristleback', 'spectre', 'huskar', 'dragon_knight'].includes(id))) {
         counterItems.push('Silver Edge (Break)');
-        notes.push('Есть сильные пассивки (Бристл / Спектра) — нужен Silver Edge для отключения.');
+        notes.push('Отключите пассивные способности ключевых танков с помощью Silver Edge.');
       }
-      if (enemyTags.includes('regen')) {
-        counterItems.push('Spirit Vessel / Shiva');
-        notes.push('Вражеский пик сильно лечится или вампирится — режьте хил предметами.');
+      if (enemyNames.some(id => ['necrophos', 'morphling', 'alchemist', 'slark', 'pudge'].includes(id))) {
+        counterItems.push('Spirit Vessel / Shiva / Skadi');
+        notes.push('У врагов высокий вампиризм и отхил — режьте восстановление здоровья.');
       }
-      if (enemyTeam.some(e => e.tags.includes('disables') || e.tags.includes('magic'))) {
+      if (enemyTeam.some(e => e.roles.includes('Disabler') || ['lion', 'shadow_shaman', 'invoker'].includes(e.id))) {
         counterItems.push('Black King Bar (BKB)');
-        notes.push('Много магии и дизейблов — тайминг BKB решает исход мидгейм-файтов.');
+        notes.push('Большое количество вражеского магического контроля требует раннего BKB.');
       }
       if (counterItems.length === 0) {
         counterItems.push('Blink Dagger', 'Black King Bar');
-        notes.push('Пик врагов сбалансирован, делайте упор на стандартные тайминговые артефакты.');
+        notes.push('Сбалансированный сетап врагов. Фокусируйтесь на своевременной инициации и позиционке.');
       }
 
       document.getElementById('modal-counter-items').innerHTML = counterItems.map(it => `
         <div class="item-chip">⚔️ ${it}</div>
       `).join('');
 
-      // Standard core items by archetype
-      let coreItems = ['Power Treads / Phase', 'Manta / Sange & Yasha', 'Aghanims Scepter'];
-      if (hero.role.includes('Support')) {
-        coreItems = ['Arcane Boots', 'Force Staff', 'Glimmer Cape', 'Aghanim Shard'];
-      }
-      document.getElementById('modal-core-items').innerHTML = coreItems.map(it => `
-        <div class="item-chip">🛡️ ${it}</div>
-      `).join('');
-
       document.getElementById('modal-strategy-note').innerText = notes.join(' ');
+
+      // Core Meta Items from OpenDota or fallback
+      const coreContainer = document.getElementById('modal-core-items');
+      coreContainer.innerHTML = 'Загрузка меты...';
+
+      try {
+        let metaItems = itemPopularityCache[heroId];
+        if (!metaItems) {
+          const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/itemPopularity`);
+          metaItems = await res.json();
+          itemPopularityCache[heroId] = metaItems;
+        }
+
+        // Common Dota core item IDs to readable names mapping
+        const itemDictionary = {
+          1: "Blink Dagger", 63: "Power Treads", 48: "Phase Boots", 116: "Black King Bar",
+          147: "Manta Style", 108: "Aghanim Scepter", 154: "Sange and Yasha", 158: "Mjollnir",
+          141: "Daedalus", 137: "Radiance", 114: "Heart of Tarrasque", 139: "Butterfly",
+          180: "Arcane Boots", 102: "Force Staff", 254: "Glimmer Cape", 232: "Aether Lens",
+          235: "Octarine Core", 267: "Spirit Vessel", 119: "Shiva's Guard", 152: "Shadow Blade",
+          249: "Silver Edge", 135: "Monkey King Bar", 149: "Eye of Skadi", 156: "Satanic"
+        };
+
+        const midItems = Object.keys(metaItems.mid_game_items || {})
+          .sort((a,b) => metaItems.mid_game_items[b] - metaItems.mid_game_items[a])
+          .slice(0, 4)
+          .map(id => itemDictionary[id] || `Предмет #${id}`);
+
+        const lateItems = Object.keys(metaItems.late_game_items || {})
+          .sort((a,b) => metaItems.late_game_items[b] - metaItems.late_game_items[a])
+          .slice(0, 3)
+          .map(id => itemDictionary[id] || `Предмет #${id}`);
+
+        const displayItems = [...new Set([...midItems, ...lateItems])].slice(0, 5);
+
+        coreContainer.innerHTML = displayItems.map(it => `
+          <div class="item-chip">🛡️ ${it}</div>
+        `).join('');
+      } catch (e) {
+        coreContainer.innerHTML = `
+          <div class="item-chip">🛡️ Power Treads / Phase</div>
+          <div class="item-chip">🛡️ Black King Bar</div>
+          <div class="item-chip">🛡️ Blink Dagger</div>
+        `;
+      }
+
       document.getElementById('detail-modal').classList.add('active');
     }
 
@@ -693,8 +761,15 @@
       document.getElementById('detail-modal').classList.remove('active');
     }
 
-    // Init
-    updateUI();
+    // Service Worker Registration for PWA & Offline
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+      });
+    }
+
+    // Startup
+    initHeroes();
   </script>
 </body>
 </html>

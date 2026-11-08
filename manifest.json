@@ -1,11 +1,11 @@
 {
   "name": "Dota Drafter & Counter Pick",
   "short_name": "DotaDrafter",
-  "description": "Dota 2 Counter-Pick & Adaptive Build Advisor",
+  "description": "Dota 2 Real-Time Counter-Pick & Adaptive Build Advisor",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0e14",
-  "theme_color": "#0d1117",
+  "theme_color": "#0b0e14",
   "orientation": "portrait",
   "icons": [
     {
