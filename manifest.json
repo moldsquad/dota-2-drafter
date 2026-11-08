@@ -1,6 +1,7 @@
 {
   "name": "Dota Drafter & Counter Pick",
   "short_name": "DotaDrafter",
+  "description": "Dota 2 Counter-Pick & Adaptive Build Advisor",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0e14",
@@ -8,14 +9,16 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
